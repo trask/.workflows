@@ -1,0 +1,38 @@
+name: Markdown link check
+
+on:
+  workflow_call:
+    inputs:
+      config-file:
+        type: string
+        required: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+
+      - name: Run markdown-link-check
+        env:
+          CONFIG_FILE: ${{ inputs.config-file }}
+        run: |
+          files=$(find . -type f -name '*.md' -not -path './CHANGELOG.md')
+
+          # retries at a file-by-file level to reduce sporadic link check failures
+
+          retry_count=3
+
+          for file in $files; do
+            for i in $(seq 1 $retry_count); do
+              if markdown-link-check --config "$CONFIG_FILE" "$file"; then
+                break
+              elif [[ $i -eq $retry_count ]]; then
+                exit 1
+              fi
+              sleep 5
+            done
+          done

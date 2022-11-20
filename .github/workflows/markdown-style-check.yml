@@ -1,0 +1,23 @@
+name: Markdown style check
+
+on:
+  workflow_call:
+    inputs:
+      config-file:
+        type: string
+        required: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+
+      - name: Run markdownlint
+        env:
+          CONFIG_FILE: ${{ inputs.config-file }}
+        run: |
+          markdownlint -c "$CONFIG_FILE" **/*.md
